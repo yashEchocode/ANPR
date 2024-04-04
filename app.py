@@ -13,25 +13,6 @@ app = Flask(__name__)
 BASE_PATH = os.getcwd()
 UPLOAD_PATH = os.path.join(BASE_PATH,'static/upload/')
 
-# load_dotenv()
-# headers = os.getenv("API_HEADERS")
-
-# print(headers)
-# headers = json.loads(headers)
-# url = os.getenv("API_URL")
-
-
-# url = "https://api.edenai.run/v2/ocr/ocr"
-
-# headers = {"Authorization" : "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMmNkZWFhM2MtNzcyZS00ZGJjLTkyNGUtZTY0ZWU3YjYwODFmIiwidHlwZSI6ImFwaV90b2tlbiJ9.T2OV4eaNPtSkB6L5q2qG4TSXl3Yk77eveiUedLNAcAo"}
-
-
-# data = {
-#     "providers": "google",
-#     "language": "en",
-#     "fallback_providers": ""
-# }
-
 db = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -50,7 +31,16 @@ dbCol = cur.fetchall()
 
 # print(dbCol)
 
-@app.route('/',methods=['POST','GET'])
+@app.route('/')
+@app.route('/first')
+def first():
+    return render_template('first.html')
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/index',methods=['POST','GET'])
 def index():
 
     if request.method == 'POST':
@@ -66,8 +56,11 @@ def index():
         text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
 
         cur = db.cursor()
-        cur.execute("SELECT * FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
+        cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
         feachdata = cur.fetchall()
+
+        if len(feachdata) > 0:
+            feachdata = feachdata[0]
 
         print("feachdata",type( feachdata))
 

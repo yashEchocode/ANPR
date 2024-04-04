@@ -1,71 +1,98 @@
-{% extends 'layout.html' %}
-{% block body %}
-<div class="container">
-  <br /><br />
-  <form action="#" method="POST" enctype="multipart/form-data">
-    <div class="input-group">
-      <input type="file" class="form-control" name="image_name" required />
-      <input type="submit" value="Upload" class="btn btn-outline-secondary" />
-    </div>
-  </form>
-</div>
+  {% extends 'layout.html' %}
+  {% block body %}
+  <div class="container">
+    <br /><br />
+    <form action="#" method="POST" enctype="multipart/form-data">
+      <div class="input-group">
+        <input type="file" class="form-control" name="image_name" required />
+        <input type="submit" value="Upload" class="btn btn-primary" />
+      </div>
+    </form>
+  </div>
 
-{% if upload %}
-<div class="container">
-  <br /><br />
-  <div class="row">
-    <div class="col-md-4">
-      <img class="rounded img-fluid" src="/static/upload/{{ upload_image }}" alt="">
+  {% if upload %}
+  <div class="container mt-5">
+    <div class="led-container text-center d-flex justify-content-center align-items-center p-3">
+      {% if rol == "No Data Found" %}
+        <p class="text-center m-0 px-3">Unauthorized Vehicle</p>
+        <div class="led led-red"></div> <!-- Red LED light -->
+      {% else %}
+        <p class="text-center m-0 px-3">Authorized Vehicle</p>
+        <div class="led led-green"></div> <!-- Green LED light -->
+      {% endif %}
     </div>
-    <div class="col-md-4">
-      <img class="rounded img-fluid" src="/static/predict/{{ upload_image }}" alt="">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-body text-center">
+            <h5 class="card-title">Original Image</h5>
+            <img class="img-fluid rounded smaller-image" src="/static/upload/{{ upload_image }}" alt="Uploaded Image">
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-body text-center">
+            <h5 class="card-title">Detected Image</h5>
+            <img class="img-fluid rounded smaller-image" src="/static/predict/{{ upload_image }}" alt="Predicted Image">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">License Plate Information</h5>
+        <div class="">
+          <table class="table table-bordered">
+            <tbody>
+              {% for lic in text %}
+              <tr>
+                <td>Detected Vehicle Number:</td>
+                <td>{{ lic }}</td>
+              </tr>
+              {% endfor %}
+              <tr>
+                <td>Database Result :</td>
+                <td>{{ rol }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
-  <br>
-  <table style="border: solid black; width: 100%">
-    {% for lic in text %}
-    <tr style="border: solid black">
-      <td style="background-color: greenyellow">
-        <p class="display-8">Vehicle Number: {{ lic }}</p>
-      </td>
-    </tr>
-    {% endfor %}
+  {% endif %}
 
-    <tr style="border: solid black">
-      <td>
-        <p class="display-8">{{rol}}</p>
-      </td>
-    </tr>
-    <tr style="border: solid black">
-      <td>
-        {% if rol == "No Data Found" %}
-          <span class="led led-red"></span> <!-- Red LED light -->
-        {% else %}
-          <span class="led led-green"></span> <!-- Green LED light -->
-        {% endif %}
-      </td>
-    </tr>
-  </table>
-</div>
-{% endif %}
+  <style>
+    .led-container {
+      margin-top: 20px;
+      padding: 15px 0; /* Vertical padding */
+    }
 
-<style>
-  .led {
-    width: 20px;
-    height: 20px;
-    display: inline-block;
-    border-radius: 50%;
-    margin-right: 10px;
-  }
+    .led {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
 
-  .led-red {
-    background-color: #ff4d4d; /* Red color */
-    box-shadow: 0 0 20px #ff4d4d, inset 0 0 10px #ff3333;
-  }
+    .led-red {
+      background-color: #ff4d4d; /* Red color */
+      box-shadow: 0 0 20px #ff4d4d, inset 0 0 10px #ff3333;
+    }
 
-  .led-green {
-    background-color: #00cc00; /* Green color */
-    box-shadow: 0 0 20px #00cc00, inset 0 0 10px #00b300;
-  }
-</style>
-{% endblock %}
+    .led-green {
+      background-color: #00cc00; /* Green color */
+      box-shadow: 0 0 20px #00cc00, inset 0 0 10px #00b300;
+    }
+    
+    .smaller-image {
+      max-width: 100%; /* Ensure image does not exceed parent container */
+      max-height: 350px; /* Set maximum height for the image */
+    }
+
+    .text-center {
+      margin-bottom: 0; /* Remove bottom margin from text */
+    }
+  </style>
+  {% endblock %}
