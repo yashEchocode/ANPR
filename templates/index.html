@@ -1,0 +1,71 @@
+{% extends 'layout.html' %}
+{% block body %}
+<div class="container">
+  <br /><br />
+  <form action="#" method="POST" enctype="multipart/form-data">
+    <div class="input-group">
+      <input type="file" class="form-control" name="image_name" required />
+      <input type="submit" value="Upload" class="btn btn-outline-secondary" />
+    </div>
+  </form>
+</div>
+
+{% if upload %}
+<div class="container">
+  <br /><br />
+  <div class="row">
+    <div class="col-md-4">
+      <img class="rounded img-fluid" src="/static/upload/{{ upload_image }}" alt="">
+    </div>
+    <div class="col-md-4">
+      <img class="rounded img-fluid" src="/static/predict/{{ upload_image }}" alt="">
+    </div>
+  </div>
+  <br>
+  <table style="border: solid black; width: 100%">
+    {% for lic in text %}
+    <tr style="border: solid black">
+      <td style="background-color: greenyellow">
+        <p class="display-8">Vehicle Number: {{ lic }}</p>
+      </td>
+    </tr>
+    {% endfor %}
+
+    <tr style="border: solid black">
+      <td>
+        <p class="display-8">{{rol}}</p>
+      </td>
+    </tr>
+    <tr style="border: solid black">
+      <td>
+        {% if rol == "No Data Found" %}
+          <span class="led led-red"></span> <!-- Red LED light -->
+        {% else %}
+          <span class="led led-green"></span> <!-- Green LED light -->
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+{% endif %}
+
+<style>
+  .led {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+
+  .led-red {
+    background-color: #ff4d4d; /* Red color */
+    box-shadow: 0 0 20px #ff4d4d, inset 0 0 10px #ff3333;
+  }
+
+  .led-green {
+    background-color: #00cc00; /* Green color */
+    box-shadow: 0 0 20px #00cc00, inset 0 0 10px #00b300;
+  }
+</style>
+{% endblock %}

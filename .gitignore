@@ -1,0 +1,7 @@
+.env
+.vscode
+static/upload
+static/predict
+static/NEW img
+final db.sql
+results.csv
