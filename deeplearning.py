@@ -196,6 +196,15 @@ def object_detection(path,filename):
     cv2.imwrite('./static/predict/{}'.format(filename),result_img)
     return text_list
 
+def object_detection_camera(image):
+    # read image
+    # image = cv2.imread(path)
+    # print(path)
+    image = np.array(image,dtype=np.uint8)
+    result_img, text_list = predictions(image,net,'')
+    # cv2.imwrite('./static/predict/{}'.format(filename),result_img)
+    return text_list
+
 
 
 def apply_brightness_contrast(input_img, brightness = 0, contrast = 0):

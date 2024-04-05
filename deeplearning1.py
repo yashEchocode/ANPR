@@ -5,19 +5,7 @@ import easyocr
 import json
 import requests
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
-headers = os.getenv("API_HEADERS")
-
-headers = json.loads(headers)
-url = os.getenv("API_URL")
-
-data = {
-    "providers": "google",
-    "language": "en",
-    "fallback_providers": ""
-}
 
 # Loading MODEL
 INPUT_WIDTH =  640
@@ -91,24 +79,6 @@ def extract_text(image,bbox):
         
         roi_filename = f'{"static/roi"}/roi_{x}.jpg'
         cv2.imwrite(roi_filename, roi)
-
-        # img = cv2.imread(roi_filename)
-        # char = segment_characters(img)
-
-        # for i in range(len(char)):
-        #     plt.subplot(1, len(char), i + 1)
-        #     plt.imshow(char[i], cmap="gray")
-        #     plt.axis("on")
-        #     plt.title("Char {}".format(i + 1))
-        #     plt.gca().set_xticks([])
-        #     plt.gca().set_yticks([])
-
-        # plt.show()
-
-        files = {"file": open(roi_filename, 'rb')}
-        response = requests.post(url, data=data, files=files, headers=headers)
-        result = json.loads(response.text)
-        text = result["google"]["text"]
 
         return text
 

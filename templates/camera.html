@@ -1,0 +1,61 @@
+{% extends 'layout.html' %}
+{% block body %}
+<div class="container">
+  <br /><br />
+  <button id="openCameraBtn" class="btn btn-primary">Open Camera</button>
+  <button id="captureImageBtn" class="btn btn-success" style="display:none;">Capture Image</button>
+  <video id="cameraPreview" style="display:none;"></video>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const openCameraBtn = document.getElementById('openCameraBtn');
+  const captureImageBtn = document.getElementById('captureImageBtn');
+  const cameraPreview = document.getElementById('cameraPreview');
+  let stream = null;
+
+  openCameraBtn.addEventListener('click', async function() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      cameraPreview.srcObject = stream;
+      cameraPreview.play();
+      openCameraBtn.style.display = 'none';
+      captureImageBtn.style.display = 'block';
+      cameraPreview.style.display = 'block';
+    } catch(err) {
+      console.error('Error accessing camera:', err);
+    }
+  });
+
+  captureImageBtn.addEventListener('click', function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = cameraPreview.videoWidth;
+    canvas.height = cameraPreview.videoHeight;
+    canvas.getContext('2d').drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL('image/png');
+
+    // Send POST request with captured image data
+    fetch('/process_image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ image_data: imageData })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to send image data.');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Handle response from server if needed
+      console.log('Image data sent successfully:', data);
+    })
+    .catch(error => {
+      console.error('Error sending image data:', error);
+    });
+  });
+});
+</script>
+{% endblock %}
