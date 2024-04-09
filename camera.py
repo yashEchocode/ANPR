@@ -1,32 +1,54 @@
+# importing OpenCV library
 import cv2
-import numpy as np
-from flask import Flask, render_template, request
-import os 
-from deeplearning import predictions
-from flask_mysqldb import MySQL
-import mysql.connector
+import os
 
-# Load the object detection model (assuming 'net' is already defined)
-INPUT_WIDTH = 640
-INPUT_HEIGHT = 640
-net = cv2.dnn.readNetFromONNX('./static/models/best.onnx')
-net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+BASE_PATH = os.getcwd()
+UPLOAD_PATH = os.path.join(BASE_PATH, 'static/upload/')
 
-# Open a connection to the camera (camera index 0 represents the default camera)
-def openCamera():
-    cap = cv2.VideoCapture(0)
+
+def capture_image():
+    # initialize the camera
+    # If you have multiple cameras connected with
+    # the current device, assign a value in cam_port
+    # variable according to that
+    cam_port = 0
+    cam = cv2.VideoCapture(cam_port)
 
     while True:
-        # Capture a frame from the camera
-        ret, frame = cap.read()
+        print ("capturing..")
+        # reading the input using the camera
+        result, image = cam.read()
 
-        result_img, text_list = predictions(frame, net, "")
+        # If image will detected without any error,
+        # show result
+        if result:
+            # showing result, it takes frame name and image
+            # output
+            cv2.imshow("GeeksForGeeks", image)
 
-        print(text_list)
-        cv2.imshow('Object Detection', result_img)
+            # Wait for 'c' key to be pressed to capture the image
+            if cv2.waitKey(1) & 0xFF == ord('c'):
+                # Generate filename for the captured image
+                filename = "GeeksForGeeks.png"
+                path_save = os.path.join(UPLOAD_PATH, filename)
+                # saving image in local storage
+                cv2.imwrite(path_save, image)
+                print("Image captured!")
+                cam.release()
+                cv2.destroyAllWindows()
+                return path_save, filename
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    cap.release()
-    cv2.destroyAllWindows()
+
+        # If captured image is corrupted, moving to else part
+        else:
+            print("No image detected. Please! try again")
+
+    # Release the camera and close OpenCV windows
+        
+
+# capture_image()
+# Example usage:
+# path_save, filename = capture_image()
+# print("Path:", path_save)
+# print("Filename:", filename)
+

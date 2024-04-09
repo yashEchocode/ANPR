@@ -7,12 +7,13 @@ import re
 from dotenv import load_dotenv
 import requests
 import json
-from camera import openCamera
+# from camera import openCamera
 import cv2
 import numpy as np
 import base64
 import matplotlib.pyplot as plt
 import uuid
+from camera import capture_image
 
 app = Flask(__name__)
 
@@ -46,9 +47,45 @@ def first():
 def login():
     return render_template('login.html')
 
+# @app.route('/camera')
+# def camera():
+
+#     # if request.method == 'POST':
+#     #     path_save, filename = capture_image()
+#     #     text_list = object_detection(path_save,filename)
+#     #     print("text_list",text_list)
+#     return render_template('index.html')
+
 @app.route('/camera')
 def camera():
-    return render_template('camera.html')
+    path_save, filename = capture_image()
+    text_list = object_detection(path_save,filename)
+    print("text_str",text_list)
+
+
+    def remove_non_alphanumeric(text):
+        return re.sub(r'[^a-zA-Z0-9]', '', text)
+
+    text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
+
+    cur = db.cursor()
+    cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
+    feachdata = cur.fetchall()
+
+    if len(feachdata) > 0:
+        feachdata = feachdata[0]
+
+    print("feachdata",type(feachdata))
+
+    if len(feachdata) == 0:
+        print("feachdata....")
+        feachdata = "No Data Found"
+
+
+    return render_template('index.html',upload=True,upload_image=filename,text=text_list,no=len(text_list), rol=feachdata)
+
+
+#     return render_template('camera.html')
 
 @app.route('/index',methods=['POST','GET'])
 def index():
@@ -58,7 +95,9 @@ def index():
         filename = upload_file.filename
         path_save = os.path.join(UPLOAD_PATH,filename)
         upload_file.save(path_save)
+        # path_save, filename = capture_image()
         text_list = object_detection(path_save,filename)
+
 
         def remove_non_alphanumeric(text):
             return re.sub(r'[^a-zA-Z0-9]', '', text)
@@ -84,41 +123,41 @@ def index():
     return render_template('index.html',upload=False)
 
 
-@app.route('/process_image', methods=['POST'])
-def process_image():
+# @app.route('/process_image', methods=['POST'])
+# def process_image():
    
-    image_file = request.json['image_data']  # Extract image data from JSON payload
-    decoded_image_data = np.frombuffer(base64.b64decode(image_file.split(',')[1]), np.uint8)
-    image = cv2.imdecode(decoded_image_data, cv2.IMREAD_COLOR)
-    plt.imshow(image)
-    plt.show()
+#     image_file = request.json['image_data']  # Extract image data from JSON payload
+#     decoded_image_data = np.frombuffer(base64.b64decode(image_file.split(',')[1]), np.uint8)
+#     image = cv2.imdecode(decoded_image_data, cv2.IMREAD_COLOR)
+#     plt.imshow(image)
+#     plt.show()
 
     
-    filename = str(uuid.uuid4()) + '.jpg' 
-    path_save = os.path.join(UPLOAD_PATH, filename)
-    cv2.imwrite(path_save, image)
+#     filename = str(uuid.uuid4()) + '.jpg' 
+#     path_save = os.path.join(UPLOAD_PATH, filename)
+#     cv2.imwrite(path_save, image)
 
-    text_list = object_detection(path_save,filename)
+#     text_list = object_detection(path_save,filename)
 
-    def remove_non_alphanumeric(text):
-        return re.sub(r'[^a-zA-Z0-9]', '', text)
+#     def remove_non_alphanumeric(text):
+#         return re.sub(r'[^a-zA-Z0-9]', '', text)
 
-    text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
-    cur = db.cursor()
-    cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
-    feachdata = cur.fetchall()
+#     text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
+#     cur = db.cursor()
+#     cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
+#     feachdata = cur.fetchall()
 
-    if len(feachdata) > 0:
-        feachdata = feachdata[0]
+#     if len(feachdata) > 0:
+#         feachdata = feachdata[0]
 
-    print("feachdata",feachdata)
+#     print("feachdata",feachdata)
 
-    if len(feachdata) == 0:
-        print("feachdata....")
-        feachdata = "No Data Found"
+#     if len(feachdata) == 0:
+#         print("feachdata....")
+#         feachdata = "No Data Found"
     
    
-    return render_template('liveFeed.html',upload=True,upload_image=filename,text=text_list,no=len(text_list), rol=feachdata)
+#     return render_template('index.html',upload=True,upload_image=filename,text=text_list,no=len(text_list), rol=feachdata)
 
 
 # @app.route('/run_script',methods=['POST','GET'])

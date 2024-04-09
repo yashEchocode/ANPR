@@ -136,18 +136,26 @@ def extract_text(image,bbox):
         files = {"file": open(roi_filename, 'rb')}
         response = requests.post(url, data=data, files=files, headers=headers)
         result = json.loads(response.text)
-        print("Deep Api Result - ", result["amazon"]["text"])
+        # print("Deep Api Result - ", result["amazon"]["text"])
         text = result["amazon"]["text"]
 
         
         def clean_vehicle_number(text):
             pattern = r'^(?:IND)?[^A-Z]*(\b[A-Z]{2}.+)'
-
             match = re.match(pattern, text)
             if match:
                 return match.group(1)
             else:
                 return ''
+
+        # def clean_vehicle_number(text):
+        #     pattern = r'^(?:IND)?[^A-Z]*(\b[A-Z]{2}.+)'
+        #     cleaned_text = re.sub(r'\bIND', '', text)
+        #     match = re.search(pattern, cleaned_text)
+        #     if match:
+        #         return match.group(1)
+        #     else:
+        #         return None
 
         text = clean_vehicle_number(text)
 
