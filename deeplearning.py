@@ -168,19 +168,19 @@ def drawings(image,boxes_np,confidences_np,index, path_save):
         x,y,w,h =  boxes_np[ind]
         bb_conf = confidences_np[ind]
         conf_text = 'plate: {:.0f}%'.format(bb_conf*100)
-        license_text = extract_text(image,boxes_np[ind])
+        # license_text = extract_text(image,boxes_np[ind])
 
-        text_width, text_height = cv2.getTextSize(license_text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 1)[0]
+        # text_width, text_height = cv2.getTextSize(license_text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 1)[0]
 
         cv2.rectangle(image,(x,y),(x+w,y+h),(0,0,0),2)
         cv2.rectangle(image,(x,y-30),(x+w,y),(0,0,0),-1)
-        cv2.rectangle(image,(x,y+h),(x+max(text_width,w),y+h+40),(0,0,0),-1)
+        # cv2.rectangle(image,(x,y+h),(x+max(text_width,w),y+h+40),(0,0,0),-1)
 
 
         cv2.putText(image,conf_text,(x,y-10),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
-        cv2.putText(image,license_text,(x,y+h+27),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
+        # cv2.putText(image,license_text,(x,y+h+27),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
         
-        text_list.append(license_text)
+        # text_list.append(license_text)
 
     return image,  text_list
 
@@ -190,9 +190,10 @@ def predictions(img,net, path):
     ## detections
     input_image, detections = get_detections(img,net)
     boxes_np, confidences_np, index = filter_detection(input_image, detections)
+    return index, boxes_np
     ## Drawings
-    result_img, text = drawings(img,boxes_np,confidences_np,index, path)
-    return result_img, text
+    # result_img, text = drawings(img,boxes_np,confidences_np,index, path)
+    # return result_img, text
 
 
 def object_detection(path,filename):
