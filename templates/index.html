@@ -1,106 +1,137 @@
-  {% extends 'layout.html' %}
-  {% block body %}
-  <div class="container">
-    <br /><br />
-    <form action="#" method="POST" enctype="multipart/form-data">
-      <div class="input-group">
-        <input type="file" class="form-control" name="image_name" required />
-        <input type="submit" value="Upload" class="btn btn-primary" />
-      </div>
-    </form>
+    {% extends 'layout.html' %}
+    {% block body %}
+    <div class="container">
+      <br /><br />
+      <form action="#" method="POST" enctype="multipart/form-data">
+        <div class="input-group">
+          <input type="file" class="form-control" name="image_name" required />
+          <input type="submit" value="Upload" class="btn btn-primary" />
+        </div>
+      </form>
 
-    <form action="/camera" method="GET" enctype="">
-      <div class="input-group">
-        <input type="submit" value="camera" class="btn btn-primary" />
+      <form action="/camera" method="GET" enctype="">
+        <div class="input-group">
+          <input type="submit" value="camera" class="btn btn-primary" />
+        </div>
+      </form>
+      <div>
+        <ul id="vehicle-list">  </ul>
       </div>
-    </form>
-    <!-- <button onclick="runPythonScript()">Run Python Script</button> -->
-  </div>
 
-  {% if upload %}
-  <div class="container mt-5">
-    <div class="led-container text-center d-flex justify-content-center align-items-center p-3">
-      {% if rol == "No Data Found" %}
-        <p class="text-center m-0 px-3">Unauthorized Vehicle</p>
-        <div class="led led-red"></div> <!-- Red LED light -->
-      {% else %}
-        <p class="text-center m-0 px-3">Authorized Vehicle</p>
-        <div class="led led-green"></div> <!-- Green LED light -->
-      {% endif %}
+      <!-- <button onclick="runPythonScript()">Run Python Script</button> -->
     </div>
-    <div class="row">
-      <div class="col-md-6">
-        <div class="card mb-3">
-          <div class="card-body text-center">
-            <h5 class="card-title">Original Image</h5>
-            <img class="img-fluid rounded smaller-image" src="/static/upload/{{ upload_image }}" alt="Uploaded Image">
+
+    {% if upload %}
+    <div class="container mt-5">
+      <div class="led-container text-center d-flex justify-content-center align-items-center p-3">
+        {% if rol == "No Data Found" %}
+          <p class="text-center m-0 px-3">Unauthorized Vehicle</p>
+          <div class="led led-red"></div> <!-- Red LED light -->
+        {% else %}
+          <p class="text-center m-0 px-3">Authorized Vehicle</p>
+          <div class="led led-green"></div> <!-- Green LED light -->
+        {% endif %}
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-body text-center">
+              <h5 class="card-title">Original Image</h5>
+              <img class="img-fluid rounded smaller-image" src="/static/upload/{{ upload_image }}" alt="Uploaded Image">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-body text-center">
+              <h5 class="card-title">Detected Image</h5>
+              <img class="img-fluid rounded smaller-image" src="/static/predict/{{ upload_image }}" alt="Predicted Image">
+            </div>
           </div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="card mb-3">
-          <div class="card-body text-center">
-            <h5 class="card-title">Detected Image</h5>
-            <img class="img-fluid rounded smaller-image" src="/static/predict/{{ upload_image }}" alt="Predicted Image">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">License Plate Information</h5>
+          <div class="">
+            <table class="table table-bordered">
+              <tbody>
+                {% for lic in text %}
+                <tr>
+                  <td>Detected Vehicle Number:</td>
+                  <td>{{ lic }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                  <td>Database Result :</td>
+                  <td>{{ rol }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
+        
       </div>
+      
     </div>
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">License Plate Information</h5>
-        <div class="">
-          <table class="table table-bordered">
-            <tbody>
-              {% for lic in text %}
-              <tr>
-                <td>Detected Vehicle Number:</td>
-                <td>{{ lic }}</td>
-              </tr>
-              {% endfor %}
-              <tr>
-                <td>Database Result :</td>
-                <td>{{ rol }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
+    {% endif %}
 
-  <style>
-    .led-container {
-      margin-top: 20px;
-      padding: 15px 0; /* Vertical padding */
-    }
+    <style>
+      .led-container {
+        margin-top: 20px;
+        padding: 15px 0; /* Vertical padding */
+      }
 
-    .led {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
+      .led {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
 
-    .led-red {
-      background-color: #ff4d4d; /* Red color */
-      box-shadow: 0 0 20px #ff4d4d, inset 0 0 10px #ff3333;
-    }
+      .led-red {
+        background-color: #ff4d4d; /* Red color */
+        box-shadow: 0 0 20px #ff4d4d, inset 0 0 10px #ff3333;
+      }
 
-    .led-green {
-      background-color: #00cc00; /* Green color */
-      box-shadow: 0 0 20px #00cc00, inset 0 0 10px #00b300;
-    }
-    
-    .smaller-image {
-      max-width: 100%; /* Ensure image does not exceed parent container */
-      max-height: 350px; /* Set maximum height for the image */
-    }
+      .led-green {
+        background-color: #00cc00; /* Green color */
+        box-shadow: 0 0 20px #00cc00, inset 0 0 10px #00b300;
+      }
+      
+      .smaller-image {
+        max-width: 100%; /* Ensure image does not exceed parent container */
+        max-height: 350px; /* Set maximum height for the image */
+      }
 
-    .text-center {
-      margin-bottom: 0; /* Remove bottom margin from text */
-    }
-  </style>
+      .text-center {
+        margin-bottom: 0; /* Remove bottom margin from text */
+      }
+    </style>
 
-  {% endblock %}
+    <script>
+      // Function to fetch and display vehicle data
+      function fetchVehicleData() {
+          fetch('/get_vehicle_data')
+              .then(response => response.json())
+              .then(data => {
+                  console.log('res data',data);
+                  // Update the vehicle list with the received data
+                  var vehicleList = document.getElementById('vehicle-list');
+                  console.log('res vehicleList',vehicleList);
+                  vehicleList.innerHTML = ''; // Clear previous data
+                  data.forEach(vehicle => {
+                    console.log('res data',vehicle);
+                      var li = document.createElement('li');
+                      li.textContent = vehicle;
+                      vehicleList.appendChild(li);
+                  });
+              })
+              .catch(error => console.error('Error fetching vehicle data:', error));
+      }
+      
+      // Call the functions to update camera feed and fetch vehicle data
+      setInterval(fetchVehicleData, 5000); // Fetch vehicle data every 5 seconds
+  </script>
+
+    {% endblock %}

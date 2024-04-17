@@ -190,7 +190,7 @@ def predictions(img,net, path):
     ## detections
     input_image, detections = get_detections(img,net)
     boxes_np, confidences_np, index = filter_detection(input_image, detections)
-    return index, boxes_np
+    return index, boxes_np, confidences_np
     ## Drawings
     # result_img, text = drawings(img,boxes_np,confidences_np,index, path)
     # return result_img, text

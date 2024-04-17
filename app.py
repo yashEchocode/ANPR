@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import os 
 from deeplearning import object_detection, object_detection_camera
 from flask_mysqldb import MySQL
@@ -56,36 +56,90 @@ def login():
 #     #     print("text_list",text_list)
 #     return render_template('index.html')
 
-@app.route('/camera')
-def camera():
-    path_save, filename = capture_image()
-    text_list = object_detection(path_save,filename)
-    print("text_str",text_list)
+# @app.route('/camera')
+# def camera():
+#     path_save, filename = capture_image()
+#     text_list = object_detection(path_save,filename)
+#     print("text_str",text_list)
 
 
-    def remove_non_alphanumeric(text):
-        return re.sub(r'[^a-zA-Z0-9]', '', text)
+#     def remove_non_alphanumeric(text):
+#         return re.sub(r'[^a-zA-Z0-9]', '', text)
 
-    text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
+#     text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
 
-    cur = db.cursor()
-    cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
-    feachdata = cur.fetchall()
+#     cur = db.cursor()
+#     cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
+#     feachdata = cur.fetchall()
 
-    if len(feachdata) > 0:
-        feachdata = feachdata[0]
+#     if len(feachdata) > 0:
+#         feachdata = feachdata[0]
 
-    print("feachdata",type(feachdata))
+#     print("feachdata",type(feachdata))
 
-    if len(feachdata) == 0:
-        print("feachdata....")
-        feachdata = "No Data Found"
+#     if len(feachdata) == 0:
+#         print("feachdata....")
+#         feachdata = "No Data Found"
 
 
-    return render_template('index.html',upload=True,upload_image=filename,text=text_list,no=len(text_list), rol=feachdata)
+#     return render_template('index.html',upload=True,upload_image=filename,text=text_list,no=len(text_list), rol=feachdata)
 
 
 #     return render_template('camera.html')
+
+
+
+@app.route('/camera')
+def camera():
+    vehicleNumber = capture_image()
+    return render_template('camera.html')
+
+# def render_template_before_route():
+#     # Define your template string with Jinja2 syntax
+#     template_string = """
+#     <!DOCTYPE html>
+#     <html lang="en">
+#     <head>
+#         <meta charset="UTF-8">
+#         <title>Pre-rendered Template</title>
+#     </head>
+#     <body>
+#         <h1>Hello, {{ name }}</h1>
+#         <p>This template was rendered before the route execution.</p>
+#     </body>
+#     </html>
+#     """
+
+#     # Render the template string with some context data
+#     rendered_template = render_template_string(template_string, name="John")
+
+#     # In a real scenario, you might return the rendered template
+#     # return rendered_template
+
+#     # For demonstration, just print the rendered template
+#     print(rendered_template)
+
+# Call the function to render the template
+
+# @app.route('/render_camera', methods=['POST'])
+def render_camera(data):
+    # if request.method == 'POST':
+        # data = request.json
+    print('render_camera', data)
+    return render_template('camera.html', vehicle=data)
+
+@app.route('/get_vehicle_data')
+def get_vehicle_data():
+    # if request.method == 'POST':
+        # data = request.json
+    cur.execute("select * from detected_vehicle")
+    detectedVehicleList = cur.fetchall()
+    data = list(detectedVehicleList)
+    # print('render_camera', detectedVehicleList)
+    return jsonify(detectedVehicleList)
+    # return render_template('camera.html', vehicle=data)
+
+
 
 @app.route('/index',methods=['POST','GET'])
 def index():
@@ -103,6 +157,7 @@ def index():
             return re.sub(r'[^a-zA-Z0-9]', '', text)
 
         text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
+        print(type(text_str))
 
         cur = db.cursor()
         cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
