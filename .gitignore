@@ -6,4 +6,4 @@ static/NEW img
 static/roi
 final db.sql
 results.csv
-node_modules
+/node_modules

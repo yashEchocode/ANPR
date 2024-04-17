@@ -16,7 +16,7 @@ from flask import Flask, render_template, request
 load_dotenv()
 headers = os.getenv("HEADERS")
 
-print(headers)
+# print(headers)
 headers = json.loads(headers)
 url = os.getenv("URL")
 
@@ -135,6 +135,8 @@ def capture_image():
                         cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (vehicleNumber,))
                         vehicleData = cur.fetchall()
                         print("Vehicle Data:", vehicleData)
+                        vehicle_data = {"number": vehicle_number, "additional_data": vehicleData}  # Modify this to include additional vehicle data
+                        socketio.emit('vehicle_detected', vehicle_data)
                     elif 'google' in result:
                         vehicleNumber = result["google"]["text"]
                         # return vehicleNumber

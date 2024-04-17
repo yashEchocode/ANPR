@@ -7,18 +7,24 @@ import re
 from dotenv import load_dotenv
 import requests
 import json
-# from camera import openCamera
 import cv2
 import numpy as np
-import base64
-import matplotlib.pyplot as plt
-import uuid
-from camera import capture_image
+from flask_socketio import SocketIO
+from deeplearning import predictions
+import time
+import threading  # Import threading module
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 BASE_PATH = os.getcwd()
 UPLOAD_PATH = os.path.join(BASE_PATH,'static/upload/')
+
+INPUT_WIDTH =  640
+INPUT_HEIGHT = 640
+net = cv2.dnn.readNetFromONNX('./static/models/best.onnx')
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
 db = mysql.connector.connect(
     host="localhost",
@@ -32,11 +38,100 @@ if(db is not None):
 
 mysql = MySQL(app)
 
+load_dotenv()
+headers = os.getenv("HEADERS")
+
+# print(headers)
+headers = json.loads(headers)
+url = os.getenv("URL")
+
+data = {
+    "providers": "amazon",
+    "language": "en",
+    "fallback_providers": "google"
+}
+
 cur = db.cursor()
 cur.execute("select vNO from VEHICLEDB")
 dbCol = cur.fetchall()
 
 # print(dbCol)
+
+
+def drawings(image, boxes_np, confidences_np, index, path_save):
+    text_list = []
+    for ind in index:
+        x, y, w, h =  boxes_np[ind]
+        bb_conf = confidences_np[ind]
+        conf_text = 'plate: {:.0f}%'.format(bb_conf * 100)
+        # license_text = extract_text(image,boxes_np[ind])
+
+        # text_width, text_height = cv2.getTextSize(license_text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 1)[0]
+
+        cv2.rectangle(image, (x, y), (x+w, y+h), (0, 0, 0), 2)
+        cv2.rectangle(image, (x, y-30), (x+w, y), (0, 0, 0), -1)
+        # cv2.rectangle(image,(x,y+h),(x+max(text_width,w),y+h+40),(0,0,0),-1)
+
+        cv2.putText(image, conf_text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 1)
+        # cv2.putText(image,license_text,(x,y+h+27),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
+
+        # text_list.append(license_text)
+
+    return image, text_list
+
+def start_camera():
+    cam_port = 0  # If you have multiple cameras, change this value
+    cam = cv2.VideoCapture(cam_port)
+
+    while True:
+        print("Capturing...")
+        result, image = cam.read()
+        # print('result:', result)
+
+        if result:
+            cv2.waitKey(1)
+            index, boxes_np, confidences_np = predictions(image, net, '')
+
+            if index is not None:
+                image_with_boxes, _ = drawings(image.copy(), boxes_np, confidences_np, index, '')
+
+                cv2.imshow('Annotated Image', image_with_boxes)
+                cv2.waitKey(1) 
+                for ind in index:
+                    x, y, w, h = boxes_np[ind]
+                    
+                    roi = image[y:y+h, x:x+w]
+                    roi_filename = f'static/roi/roi_{x}_{y}.jpg'
+                    cv2.imwrite(roi_filename, roi)
+                    files = {"file": open(roi_filename, 'rb')}
+                    response = requests.post(url, data=data, files=files, headers=headers)
+                    result = json.loads(response.text)
+                    if 'amazon' in result:
+                        vehicle_number = result["amazon"]["text"]
+                        # return vehicleNumber
+                        # detect(vehicleNumber)
+                        print("Vehicle Number:", vehicle_number)
+                        cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (vehicle_number,))
+                        vehicleData = cur.fetchall()
+                        print("Vehicle Data:", vehicleData)
+                        vehicle_data = {"number": vehicle_number, "additional_data": vehicleData}  # Modify this to include additional vehicle data
+                        emit_vehicle_data(vehicle_data)
+                    else:
+                        print("")
+                time.sleep(3)
+            else:
+                time.sleep(1)
+        else:
+            print("Failed to capture image from the camera.")
+            time.sleep(1)
+
+        # Close the camera feed window when 'q' key is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Release the camera and close all OpenCV windows
+    cam.release()
+    cv2.destroyAllWindows()
 
 @app.route('/')
 @app.route('/first')
@@ -47,99 +142,15 @@ def first():
 def login():
     return render_template('login.html')
 
-# @app.route('/camera')
-# def camera():
-
-#     # if request.method == 'POST':
-#     #     path_save, filename = capture_image()
-#     #     text_list = object_detection(path_save,filename)
-#     #     print("text_list",text_list)
-#     return render_template('index.html')
-
-# @app.route('/camera')
-# def camera():
-#     path_save, filename = capture_image()
-#     text_list = object_detection(path_save,filename)
-#     print("text_str",text_list)
-
-
-#     def remove_non_alphanumeric(text):
-#         return re.sub(r'[^a-zA-Z0-9]', '', text)
-
-#     text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
-
-#     cur = db.cursor()
-#     cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
-#     feachdata = cur.fetchall()
-
-#     if len(feachdata) > 0:
-#         feachdata = feachdata[0]
-
-#     print("feachdata",type(feachdata))
-
-#     if len(feachdata) == 0:
-#         print("feachdata....")
-#         feachdata = "No Data Found"
-
-
-#     return render_template('index.html',upload=True,upload_image=filename,text=text_list,no=len(text_list), rol=feachdata)
-
-
-#     return render_template('camera.html')
-
-
-
 @app.route('/camera')
 def camera():
-    vehicleNumber = capture_image()
+    # Start camera in a separate thread
+    camera_thread = threading.Thread(target=start_camera)
+    camera_thread.start()
     return render_template('camera.html')
 
-# def render_template_before_route():
-#     # Define your template string with Jinja2 syntax
-#     template_string = """
-#     <!DOCTYPE html>
-#     <html lang="en">
-#     <head>
-#         <meta charset="UTF-8">
-#         <title>Pre-rendered Template</title>
-#     </head>
-#     <body>
-#         <h1>Hello, {{ name }}</h1>
-#         <p>This template was rendered before the route execution.</p>
-#     </body>
-#     </html>
-#     """
-
-#     # Render the template string with some context data
-#     rendered_template = render_template_string(template_string, name="John")
-
-#     # In a real scenario, you might return the rendered template
-#     # return rendered_template
-
-#     # For demonstration, just print the rendered template
-#     print(rendered_template)
-
-# Call the function to render the template
-
-# @app.route('/render_camera', methods=['POST'])
-def render_camera(data):
-    # if request.method == 'POST':
-        # data = request.json
-    print('render_camera', data)
-    return render_template('camera.html', vehicle=data)
-
-@app.route('/get_vehicle_data')
-def get_vehicle_data():
-    # if request.method == 'POST':
-        # data = request.json
-    cur.execute("select * from detected_vehicle")
-    detectedVehicleList = cur.fetchall()
-    data = list(detectedVehicleList)
-    # print('render_camera', detectedVehicleList)
-    return jsonify(detectedVehicleList)
-    # return render_template('camera.html', vehicle=data)
-
-
+def emit_vehicle_data(vehicle_data):
+    socketio.emit('vehicle_detected', vehicle_data)
 
 @app.route('/index',methods=['POST','GET'])
 def index():
@@ -177,47 +188,5 @@ def index():
 
     return render_template('index.html',upload=False)
 
-
-# @app.route('/process_image', methods=['POST'])
-# def process_image():
-   
-#     image_file = request.json['image_data']  # Extract image data from JSON payload
-#     decoded_image_data = np.frombuffer(base64.b64decode(image_file.split(',')[1]), np.uint8)
-#     image = cv2.imdecode(decoded_image_data, cv2.IMREAD_COLOR)
-#     plt.imshow(image)
-#     plt.show()
-
-    
-#     filename = str(uuid.uuid4()) + '.jpg' 
-#     path_save = os.path.join(UPLOAD_PATH, filename)
-#     cv2.imwrite(path_save, image)
-
-#     text_list = object_detection(path_save,filename)
-
-#     def remove_non_alphanumeric(text):
-#         return re.sub(r'[^a-zA-Z0-9]', '', text)
-
-#     text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
-#     cur = db.cursor()
-#     cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
-#     feachdata = cur.fetchall()
-
-#     if len(feachdata) > 0:
-#         feachdata = feachdata[0]
-
-#     print("feachdata",feachdata)
-
-#     if len(feachdata) == 0:
-#         print("feachdata....")
-#         feachdata = "No Data Found"
-    
-   
-#     return render_template('index.html',upload=True,upload_image=filename,text=text_list,no=len(text_list), rol=feachdata)
-
-
-# @app.route('/run_script',methods=['POST','GET'])
-# def camera():
-#     openCamera()
-
 if __name__ =="__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)

@@ -9,7 +9,7 @@
         </div>
       </form>
 
-      <form action="/camera" method="GET" enctype="">
+      <form action="/camera" method="POST" enctype="">
         <div class="input-group">
           <input type="submit" value="camera" class="btn btn-primary" />
         </div>
@@ -109,7 +109,7 @@
       }
     </style>
 
-    <script>
+    <!-- <script>
       // Function to fetch and display vehicle data
       function fetchVehicleData() {
           fetch('/get_vehicle_data')
@@ -132,6 +132,6 @@
       
       // Call the functions to update camera feed and fetch vehicle data
       setInterval(fetchVehicleData, 5000); // Fetch vehicle data every 5 seconds
-  </script>
+  </script> -->
 
     {% endblock %}

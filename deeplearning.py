@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 headers = os.getenv("HEADERS")
 
-print(headers)
+# print(headers)
 headers = json.loads(headers)
 url = os.getenv("URL")
 

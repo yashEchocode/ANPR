@@ -15,7 +15,7 @@ from flask import Flask, render_template, request
 load_dotenv()
 headers = os.getenv("HEADERS")
 
-print(headers)
+# print(headers)
 headers = json.loads(headers)
 url = os.getenv("URL")
 
