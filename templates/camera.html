@@ -15,10 +15,8 @@
             background-color: #f3f3f3;
         }
 
-        h1 {
-            text-align: center;
-            color: #333;
-        }
+      
+        
 
         table {
             width: 100%;
@@ -73,15 +71,16 @@
         </div>
     </nav>
     <div class="container">
-        <div class="row justify-content-center align-items-center">
-            <div class="col-auto">
-                <div class="led-container text-center d-flex justify-content-center align-items-center p-3">
-                    <div class="led" id="led"></div>
-                </div>
-            </div>
+        <div class="text-center d-flex justify-content-center align-items-center">
             <div class="col-auto">
                 <p class="text-center m-0 px-3" id="status"></p>
             </div>
+            <div class="col-auto">
+                <div class="led-container text-center d-flex justify-content-center align-items-center m-0 px-3">
+                    <div class="led" id="led"></div>
+                </div>
+            </div>
+            
         </div>
         <table>
             <thead>
@@ -95,50 +94,56 @@
         </table>
     </div>
     <script>
-        var socket = io(); // Connect to SocketIO server
-    
-        socket.on('connect', function() {
-            console.log('Connected to server');
+    // Function to capitalize first letter and convert the rest to lowercase
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    }
+
+    var socket = io(); // Connect to SocketIO server
+
+    socket.on('connect', function() {
+        console.log('Connected to server');
+    });
+
+    socket.on('disconnect', function() {
+        console.log('Disconnected from server');
+    });
+
+    // Function to update vehicle list with received data
+    function updateVehicleList(data) {
+        var vehicleList = document.getElementById('vehicle-list');
+        let led = document.getElementById('led');
+        let status = document.getElementById('status');
+
+        data.forEach(vehicle => {
+            var row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${vehicle.number || '-'}</td>
+                <td>${vehicle.vehicleData.length > 0 ? capitalizeFirstLetter(vehicle?.vehicleData[0][1]) : "No Data Found"}</td>
+                <td>${vehicle.vehicleData.length > 0 ? "Authorized" : "Unauthorized"} Vehicle</td>
+            `;
+            vehicleList.appendChild(row);
         });
-    
-        socket.on('disconnect', function() {
-            console.log('Disconnected from server');
-        });
-    
-        // Function to update vehicle list with received data
-        function updateVehicleList(data) {
-            var vehicleList = document.getElementById('vehicle-list');
-            let led = document.getElementById('led');
-            let status = document.getElementById('status');
-    
-            data.forEach(vehicle => {
-                var row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${vehicle.number}</td>
-                    <td>${vehicle.vehicleData.length > 0 ? vehicle?.vehicleData[0][1] : ""}</td>
-                    <td>${vehicle.vehicleData.length > 0 ? "Authorized" : "Unauthorized"}</td>
-                `;
-                vehicleList.appendChild(row);
-            });
-    
-            // Update LED class based on vehicle data
-            if (data.length > 0 && data[0].vehicleData.length > 0) {
-                led.classList.remove('led-red');
-                led.classList.add('led-green');
-                status.textContent = "Authorized Vehicle";
-            } else {
-                led.classList.remove('led-green');
-                led.classList.add('led-red');
-                status.textContent = "Unauthorized Vehicle";
-            }
+
+        // Update LED class based on vehicle data
+        if (data.length > 0 && data[0].vehicleData.length > 0) {
+            led.classList.remove('led-red');
+            led.classList.add('led-green');
+            status.textContent = "Authorized Vehicle";
+        } else {
+            led.classList.remove('led-green');
+            led.classList.add('led-red');
+            status.textContent = "Unauthorized Vehicle";
         }
-    
-        // Handle 'vehicle_detected' event
-        socket.on('vehicle_detected', function(data) {
-            console.log('Received vehicle data:', data);
-            updateVehicleList([data]); // Update vehicle list with received data
-        });
-    </script>
+    }
+
+    // Handle 'vehicle_detected' event
+    socket.on('vehicle_detected', function(data) {
+        console.log('Received vehicle data:', data);
+        updateVehicleList([data]); // Update vehicle list with received data
+    });
+</script>
+
     
     
 </body>

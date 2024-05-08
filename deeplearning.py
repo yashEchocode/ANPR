@@ -16,9 +16,9 @@ headers = json.loads(headers)
 url = os.getenv("URL")
 
 data = {
-    "providers": "amazon",
+    "providers": "google",
     "language": "en",
-    "fallback_providers": ""
+    "fallback_providers": "amazon"
 }
 
 # Loading MODEL
@@ -80,47 +80,6 @@ def extract_text(image,bbox):
     
     roi = image[y:y+h, x:x+w]
 
-    state_initials = [
-    "AN",  # Andaman and Nicobar Islands
-    "AP",  # Andhra Pradesh
-    "AR",  # Arunachal Pradesh
-    "AS",  # Assam
-    "BR",  # Bihar
-    "CH",  # Chandigarh
-    "CG",  # Chhattisgarh
-    "DN",  # Dadra and Nagar Haveli
-    "DD",  # Daman and Diu
-    "DL",  # Delhi
-    "GA",  # Goa
-    "GJ",  # Gujarat
-    "HR",  # Haryana
-    "HP",  # Himachal Pradesh
-    "JK",  # Jammu and Kashmir
-    "JH",  # Jharkhand
-    "KA",  # Karnataka
-    "KL",  # Kerala
-    "LA",  # Ladakh
-    "LD",  # Lakshadweep
-    "MP",  # Madhya Pradesh
-    "MH",  # Maharashtra
-    "MN",  # Manipur
-    "ML",  # Meghalaya
-    "MZ",  # Mizoram
-    "NL",  # Nagaland
-    "OD",  # Odisha
-    "PY",  # Puducherry
-    "PB",  # Punjab
-    "RJ",  # Rajasthan
-    "SK",  # Sikkim
-    "TN",  # Tamil Nadu
-    "TS",  # Telangana
-    "TR",  # Tripura
-    "UP",  # Uttar Pradesh
-    "UK",  # Uttarakhand
-    "WB"   # West Bengal
-    ]
-    
-
     if 0 in roi.shape:
         return ''
     else:
@@ -136,26 +95,16 @@ def extract_text(image,bbox):
         files = {"file": open(roi_filename, 'rb')}
         response = requests.post(url, data=data, files=files, headers=headers)
         result = json.loads(response.text)
-        # print("Deep Api Result - ", result["amazon"]["text"])
-        text = result["amazon"]["text"]
+        # print("Deep Api Result - ", result["google"]["text"])
+        text = result["google"]["text"]
 
-        
         def clean_vehicle_number(text):
-            pattern = r'^(?:IND)?[^A-Z]*(\b[A-Z]{2}.+)'
+            pattern = r'^(?:IND)?([^A-Z]*(\b[A-Z]{2}.+))'
             match = re.match(pattern, text)
             if match:
                 return match.group(1)
             else:
                 return ''
-
-        # def clean_vehicle_number(text):
-        #     pattern = r'^(?:IND)?[^A-Z]*(\b[A-Z]{2}.+)'
-        #     cleaned_text = re.sub(r'\bIND', '', text)
-        #     match = re.search(pattern, cleaned_text)
-        #     if match:
-        #         return match.group(1)
-        #     else:
-        #         return None
 
         text = clean_vehicle_number(text)
 
@@ -168,19 +117,19 @@ def drawings(image,boxes_np,confidences_np,index, path_save):
         x,y,w,h =  boxes_np[ind]
         bb_conf = confidences_np[ind]
         conf_text = 'plate: {:.0f}%'.format(bb_conf*100)
-        # license_text = extract_text(image,boxes_np[ind])
+        license_text = extract_text(image,boxes_np[ind])
 
-        # text_width, text_height = cv2.getTextSize(license_text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 1)[0]
+        text_width, text_height = cv2.getTextSize(license_text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 1)[0]
 
         cv2.rectangle(image,(x,y),(x+w,y+h),(0,0,0),2)
         cv2.rectangle(image,(x,y-30),(x+w,y),(0,0,0),-1)
-        # cv2.rectangle(image,(x,y+h),(x+max(text_width,w),y+h+40),(0,0,0),-1)
+        cv2.rectangle(image,(x,y+h),(x+max(text_width,w),y+h+40),(0,0,0),-1)
 
 
         cv2.putText(image,conf_text,(x,y-10),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
-        # cv2.putText(image,license_text,(x,y+h+27),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
+        cv2.putText(image,license_text,(x,y+h+27),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
         
-        # text_list.append(license_text)
+        text_list.append(license_text)
 
     return image,  text_list
 
@@ -195,13 +144,23 @@ def predictions(img,net, path):
     # result_img, text = drawings(img,boxes_np,confidences_np,index, path)
     # return result_img, text
 
+def predictions_input(img,net, path):
+    ## detections
+    input_image, detections = get_detections(img,net)
+    boxes_np, confidences_np, index = filter_detection(input_image, detections)
+    ## Drawings
+    result_img, text = drawings(img,boxes_np,confidences_np,index, path)
+    print('drawing output', text)
+    return result_img, text 
+
 
 def object_detection(path,filename):
     # read image
     image = cv2.imread(path)
     # print(path)
     image = np.array(image,dtype=np.uint8)
-    result_img, text_list = predictions(image,net,path)
+    result_img, text_list = predictions_input(image,net,path)
+    print('text list prediction',text_list)
     cv2.imwrite('./static/predict/{}'.format(filename),result_img)
     return text_list
 

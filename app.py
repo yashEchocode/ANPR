@@ -168,13 +168,13 @@ def index():
         upload_file.save(path_save)
         # path_save, filename = capture_image()
         text_list = object_detection(path_save,filename)
+        print('vehicle number',text_list)
 
 
         def remove_non_alphanumeric(text):
             return re.sub(r'[^a-zA-Z0-9]', '', text)
 
         text_str = ''.join([remove_non_alphanumeric(text) for text in text_list])
-        print(type(text_str))
 
         cur = db.cursor()
         cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (text_str,))
@@ -183,7 +183,7 @@ def index():
         if len(feachdata) > 0:
             feachdata = feachdata[0]
 
-        print("feachdata",type( feachdata))
+        print("feachdata",feachdata)
 
         if len(feachdata) == 0:
             print("feachdata....")

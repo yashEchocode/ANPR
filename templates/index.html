@@ -1,24 +1,20 @@
     {% extends 'layout.html' %}
     {% block body %}
     <div class="container">
-      <br /><br />
-      <form action="#" method="POST" enctype="multipart/form-data">
-        <div class="input-group">
-          <input type="file" class="form-control" name="image_name" required />
-          <input type="submit" value="Upload" class="btn btn-primary" />
-        </div>
-      </form>
+      <div class="pt-5 d-flex justify-content-center">
+        <form action="#" method="POST" enctype="multipart/form-data">
+          <div class="input-group px-3">
+            <input type="file" class="form-control" name="image_name" required />
+            <input type="submit" value="Upload" class="btn btn-primary" />
+          </div>
+        </form>
 
-      <form action="/camera" method="POST" enctype="">
-        <div class="input-group">
-          <input type="submit" value="camera" class="btn btn-primary" />
-        </div>
-      </form>
-      <div>
-        <ul id="vehicle-list">  </ul>
+        <form action="/camera" method="POST" enctype="">
+          <div class="input-group px-3">
+            <input type="submit" value="camera" class="btn btn-primary" />
+          </div>
+        </form>
       </div>
-
-      <!-- <button onclick="runPythonScript()">Run Python Script</button> -->
     </div>
 
     {% if upload %}
