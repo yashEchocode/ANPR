@@ -110,11 +110,17 @@ def start_camera():
                         vehicle_number = result["amazon"]["text"]
                         # return vehicleNumber
                         # detect(vehicleNumber)
+
+                        def remove_non_alphanumeric(text):
+                            return re.sub(r'[^a-zA-Z0-9]', '', text)
+
+                        vehicle_number = ''.join([remove_non_alphanumeric(text) for text in vehicle_number])
                         print("Vehicle Number:", vehicle_number)
+
                         cur.execute("SELECT vNO, roll FROM VEHICLEDB WHERE vNO = (%s)", (vehicle_number,))
                         vehicleData = cur.fetchall()
                         print("Vehicle Data:", vehicleData)
-                        vehicle_data = {"number": vehicle_number, "additional_data": vehicleData}  # Modify this to include additional vehicle data
+                        vehicle_data = {"number": vehicle_number, "vehicleData": vehicleData}  # Modify this to include additional vehicle data
                         emit_vehicle_data(vehicle_data)
                     else:
                         print("")
@@ -142,7 +148,7 @@ def first():
 def login():
     return render_template('login.html')
 
-@app.route('/camera')
+@app.route('/camera', methods=['POST','GET'])
 def camera():
     # Start camera in a separate thread
     camera_thread = threading.Thread(target=start_camera)
