@@ -15,9 +15,6 @@
             background-color: #f3f3f3;
         }
 
-      
-        
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -90,59 +87,75 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody id="vehicle-list"></tbody>
+            <tbody id="vehicle-list">
+                <tr id="loading-text">
+                    <td colspan="3" class="loading text-center">
+                        <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                            <div class="spinner-border" role="status"></div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
         </table>
     </div>
     <script>
-    // Function to capitalize first letter and convert the rest to lowercase
-    function capitalizeFirstLetter(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-    }
+        // Function to capitalize first letter and convert the rest to lowercase
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+        }
 
-    var socket = io(); // Connect to SocketIO server
+        var socket = io(); // Connect to SocketIO server
+        var uniquePrevisos = {}; // Maintain a dictionary to store unique previsos
 
-    socket.on('connect', function() {
-        console.log('Connected to server');
-    });
-
-    socket.on('disconnect', function() {
-        console.log('Disconnected from server');
-    });
-
-    // Function to update vehicle list with received data
-    function updateVehicleList(data) {
-        var vehicleList = document.getElementById('vehicle-list');
-        let led = document.getElementById('led');
-        let status = document.getElementById('status');
-
-        data.forEach(vehicle => {
-            var row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${vehicle.number || '-'}</td>
-                <td>${vehicle.vehicleData.length > 0 ? capitalizeFirstLetter(vehicle?.vehicleData[0][1]) : "No Data Found"}</td>
-                <td>${vehicle.vehicleData.length > 0 ? "Authorized" : "Unauthorized"} Vehicle</td>
-            `;
-            vehicleList.appendChild(row);
+        socket.on('connect', function() {
+            console.log('Connected to server');
         });
 
-        // Update LED class based on vehicle data
-        if (data.length > 0 && data[0].vehicleData.length > 0) {
-            led.classList.remove('led-red');
-            led.classList.add('led-green');
-            status.textContent = "Authorized Vehicle";
-        } else {
-            led.classList.remove('led-green');
-            led.classList.add('led-red');
-            status.textContent = "Unauthorized Vehicle";
-        }
-    }
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+        });
 
-    // Handle 'vehicle_detected' event
-    socket.on('vehicle_detected', function(data) {
-        console.log('Received vehicle data:', data);
-        updateVehicleList([data]); // Update vehicle list with received data
-    });
-</script>
+        // Function to update vehicle list with received data
+        function updateVehicleList(data) {
+            var vehicleList = document.getElementById('vehicle-list');
+            var loadingText = document.getElementById('loading-text');
+            let led = document.getElementById('led');
+            let status = document.getElementById('status');
+
+            loadingText.style.display = 'none'; // Hide loading text
+
+            data.forEach(vehicle => {
+                // Check if the previsos is already in the uniquePrevisos dictionary
+                if (!uniquePrevisos[vehicle.number]) {
+                    uniquePrevisos[vehicle.number] = true; // Mark previsos as seen
+                    var row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${vehicle.number || '-'}</td>
+                        <td>${vehicle.vehicleData.length > 0 ? capitalizeFirstLetter(vehicle?.vehicleData[0][1]) : "No Data Found"}</td>
+                        <td>${vehicle.vehicleData.length > 0 ? "Authorized" : "Unauthorized"} Vehicle</td>
+                    `;
+                    if (vehicle.vehicleData.length > 0) {
+                        led.classList.remove('led-red');
+                        led.classList.add('led-green');
+                        status.textContent = "Authorized Vehicle";
+                    } else {
+                        led.classList.remove('led-green');
+                        led.classList.add('led-red');
+                        status.textContent = "Unauthorized Vehicle";
+                    }
+                    vehicleList.appendChild(row);
+                }
+            });
+            
+        }
+
+        // Handle 'vehicle_detected' event
+        socket.on('vehicle_detected', function(data) {
+            console.log('Received vehicle data:', data);
+            updateVehicleList([data]); // Update vehicle list with received data
+        });
+    </script>
+
 
     
     

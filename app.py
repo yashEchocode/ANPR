@@ -121,7 +121,8 @@ def start_camera():
                         vehicleData = cur.fetchall()
                         print("Vehicle Data:", vehicleData)
                         vehicle_data = {"number": vehicle_number, "vehicleData": vehicleData}  # Modify this to include additional vehicle data
-                        emit_vehicle_data(vehicle_data)
+                        if not re.match(r'^[A-Za-z]+$', vehicle_number):
+                            emit_vehicle_data(vehicle_data)
                     else:
                         print("")
                 time.sleep(3)
