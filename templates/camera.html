@@ -116,38 +116,42 @@
         });
 
         // Function to update vehicle list with received data
-        function updateVehicleList(data) {
-            var vehicleList = document.getElementById('vehicle-list');
-            var loadingText = document.getElementById('loading-text');
-            let led = document.getElementById('led');
-            let status = document.getElementById('status');
+        // Function to update vehicle list with received data
+function updateVehicleList(data) {
+    var vehicleList = document.getElementById('vehicle-list');
+    var loadingText = document.getElementById('loading-text');
+    let led = document.getElementById('led');
+    let status = document.getElementById('status');
 
-            loadingText.style.display = 'none'; // Hide loading text
+    loadingText.style.display = 'none'; // Hide loading text
 
-            data.forEach(vehicle => {
-                // Check if the previsos is already in the uniquePrevisos dictionary
-                if (!uniquePrevisos[vehicle.number]) {
-                    uniquePrevisos[vehicle.number] = true; // Mark previsos as seen
-                    var row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${vehicle.number || '-'}</td>
-                        <td>${vehicle.vehicleData.length > 0 ? capitalizeFirstLetter(vehicle?.vehicleData[0][1]) : "No Data Found"}</td>
-                        <td>${vehicle.vehicleData.length > 0 ? "Authorized" : "Unauthorized"} Vehicle</td>
-                    `;
-                    if (vehicle.vehicleData.length > 0) {
-                        led.classList.remove('led-red');
-                        led.classList.add('led-green');
-                        status.textContent = "Authorized Vehicle";
-                    } else {
-                        led.classList.remove('led-green');
-                        led.classList.add('led-red');
-                        status.textContent = "Unauthorized Vehicle";
-                    }
-                    vehicleList.appendChild(row);
-                }
-            });
-            
+    var previousEntry = null; // Variable to store previous entry
+
+    data.forEach(vehicle => {
+        // Check if the previsos is already in the uniquePrevisos dictionary
+        if (vehicle.number !== previousEntry) {
+            uniquePrevisos[vehicle.number] = true; // Mark previsos as seen
+            var row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${vehicle.number || '-'}</td>
+                <td>${vehicle.vehicleData.length > 0 ? capitalizeFirstLetter(vehicle?.vehicleData[0][1]) : "No Data Found"}</td>
+                <td>${vehicle.vehicleData.length > 0 ? "Authorized" : "Unauthorized"} Vehicle</td>
+            `;
+            if (vehicle.vehicleData.length > 0) {
+                led.classList.remove('led-red');
+                led.classList.add('led-green');
+                status.textContent = "Authorized Vehicle";
+            } else {
+                led.classList.remove('led-green');
+                led.classList.add('led-red');
+                status.textContent = "Unauthorized Vehicle";
+            }
+            vehicleList.appendChild(row);
+            previousEntry = vehicle.number; // Update previous entry
         }
+    });
+}
+
 
         // Handle 'vehicle_detected' event
         socket.on('vehicle_detected', function(data) {
